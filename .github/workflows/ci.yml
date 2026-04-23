@@ -45,4 +45,8 @@ jobs:
       - name: Run integration tests
         working-directory: backend
         # mvn verify runs Surefire (unit) + Failsafe (IT) — Testcontainers spins up Postgres automatically
+        # TESTCONTAINERS_RYUK_DISABLED prevents the Ryuk reaper container from killing the
+        # Postgres container mid-run due to socket timeouts on GitHub Actions runners
+        env:
+          TESTCONTAINERS_RYUK_DISABLED: "true"
         run: mvn verify -B
