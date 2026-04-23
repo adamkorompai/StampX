@@ -1,0 +1,61 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: stampx
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - stampx-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME} -d stampx"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build: ./backend
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DB_URL: ${DB_URL}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      ADMIN_SECRET: ${ADMIN_SECRET}
+      PASS_SERVICE_URL: ${PASS_SERVICE_URL}
+      APPLE_PASS_TYPE_IDENTIFIER: ${APPLE_PASS_TYPE_IDENTIFIER}
+      APPLE_TEAM_IDENTIFIER: ${APPLE_TEAM_IDENTIFIER}
+      BASE_URL: ${BASE_URL}
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-prod}
+    networks:
+      - stampx-net
+
+  pass-service:
+    build: ./pass-service
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./pass-service/certs:/app/certs:ro
+    environment:
+      PORT: 3001
+      APPLE_PASS_TYPE_IDENTIFIER: ${APPLE_PASS_TYPE_IDENTIFIER}
+      APPLE_TEAM_IDENTIFIER: ${APPLE_TEAM_IDENTIFIER}
+      APNS_KEY_ID: ${APNS_KEY_ID}
+      BASE_URL: ${BASE_URL}
+      CERT_PASSPHRASE: ${CERT_PASSPHRASE}
+      NODE_ENV: production
+    networks:
+      - stampx-net
+
+volumes:
+  postgres_data:
+
+networks:
+  stampx-net:

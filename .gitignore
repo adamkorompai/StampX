@@ -1,0 +1,36 @@
+# Maven / Java
+target/
+*.class
+*.jar
+*.war
+*.ear
+.mvn/wrapper/maven-wrapper.jar
+
+# IDE
+.idea/
+*.iml
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db
+
+# Spring secrets
+application-local.yml
+application-local.properties
+
+# Environment
+.env
+
+# Node
+pass-service/node_modules/
+
+# Apple certificates (NEVER commit)
+pass-service/certs/
+*.p12
+*.pem
+*.p8
+*.cer
+*.key
+
+# Docker volumes
+postgres-data/

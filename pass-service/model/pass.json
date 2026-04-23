@@ -1,0 +1,18 @@
+{
+  "formatVersion": 1,
+  "passTypeIdentifier": "pass.placeholder",
+  "serialNumber": "placeholder",
+  "teamIdentifier": "placeholder",
+  "organizationName": "StampX",
+  "description": "Loyalty Card",
+  "storeCard": {
+    "primaryFields": [],
+    "secondaryFields": [],
+    "auxiliaryFields": []
+  },
+  "barcode": {
+    "format": "PKBarcodeFormatQR",
+    "message": "placeholder",
+    "messageEncoding": "iso-8859-1"
+  }
+}
