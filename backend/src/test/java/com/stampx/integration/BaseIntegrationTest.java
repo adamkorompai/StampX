@@ -13,28 +13,30 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * Shared base for all integration tests.
- * - Starts a real PostgreSQL container via Testcontainers
- * - @DynamicPropertySource explicitly wires the container URL into Spring's property environment
- *   after the container is fully started; more reliable in CI than @ServiceConnection
- * - @ActiveProfiles("test") prevents application-dev.yml from loading
- * - Mocks PassService so tests don't need the Node.js pass-service running
+ * Singleton Container pattern: the container is started once in a static block when this
+ * class is first loaded, and stopped by Testcontainers' JVM shutdown hook when the JVM exits.
+ *
+ * This avoids the @Testcontainers / @Container per-class lifecycle that stops the container
+ * after each test class finishes. Without the singleton pattern, the second IT class gets a
+ * new container with a new port, but Spring's context cache still holds Hikari connections
+ * to the now-dead first container, causing "connection has been closed" failures.
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
-@Testcontainers
 @ActiveProfiles("test")
 public abstract class BaseIntegrationTest {
 
-    @Container
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16");
+    static final PostgreSQLContainer<?> postgres;
+
+    static {
+        postgres = new PostgreSQLContainer<>("postgres:16");
+        postgres.start();
+    }
 
     @DynamicPropertySource
     static void datasourceProperties(DynamicPropertyRegistry registry) {

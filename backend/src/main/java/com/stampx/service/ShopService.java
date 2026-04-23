@@ -83,6 +83,7 @@ public class ShopService {
 
     public static ShopPublicDTO toPublicDTO(Shop shop) {
         return new ShopPublicDTO(
+                shop.getSlug(),
                 shop.getName(),
                 shop.getLogoUrl(),
                 shop.getPrimaryColor(),
