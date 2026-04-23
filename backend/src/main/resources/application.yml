@@ -26,7 +26,7 @@ server:
         secure: false  # overridden in application-prod.yml
 
 app:
-  admin-secret: ${ADMIN_SECRET}
+  admin-secret: ${ADMIN_SECRET:changeme-admin-secret}
   pass-service-url: ${PASS_SERVICE_URL:http://localhost:3001}
   base-url: ${BASE_URL:http://localhost:8080}
   apple-pass-type-identifier: ${APPLE_PASS_TYPE_IDENTIFIER:pass.placeholder}
