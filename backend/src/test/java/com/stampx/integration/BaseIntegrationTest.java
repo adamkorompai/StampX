@@ -6,9 +6,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.testcontainers.containers.PostgreSQLContainer;
@@ -20,11 +21,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 /**
  * Shared base for all integration tests.
- * - Starts a real PostgreSQL container via Testcontainers (@ServiceConnection wires it automatically)
+ * - Starts a real PostgreSQL container via Testcontainers
+ * - @DynamicPropertySource explicitly wires the container URL into Spring's property environment
+ *   after the container is fully started; more reliable in CI than @ServiceConnection
+ * - @ActiveProfiles("test") prevents application-dev.yml from loading
  * - Mocks PassService so tests don't need the Node.js pass-service running
- * - Provides helpers for common operations (register, login)
- * - @ActiveProfiles("test") prevents application-dev.yml from loading so @ServiceConnection
- *   can supply the datasource URL without being overridden by the dev profile's explicit URL
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
@@ -33,8 +34,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public abstract class BaseIntegrationTest {
 
     @Container
-    @ServiceConnection
     static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16");
+
+    @DynamicPropertySource
+    static void datasourceProperties(DynamicPropertyRegistry registry) {
+        registry.add("spring.datasource.url", postgres::getJdbcUrl);
+        registry.add("spring.datasource.username", postgres::getUsername);
+        registry.add("spring.datasource.password", postgres::getPassword);
+    }
 
     @Autowired
     protected MockMvc mockMvc;
